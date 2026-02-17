@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event Management System</title>
+  <style>
+    body{font-family:Arial;margin:0;background:#f4f6f9}
+    .nav{background:#2c3e50;padding:10px;color:#fff;display:flex;gap:10px}
+    .nav button{padding:8px 12px;border:none;cursor:pointer}
+    .container{padding:20px}
+    .card{background:#fff;padding:20px;border-radius:10px;margin-bottom:20px}
+    input,select{padding:8px;margin:5px;width:100%}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+<div class="nav">
+  <button onclick="show('login')">Login</button>
+  <button onclick="show('maintenance')" id="mMenu">Maintenance</button>
+  <button onclick="show('reports')">Reports</button>
+  <button onclick="show('transactions')">Transactions</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+  <div id="login" class="card">
+    <h3>Login</h3>
+    <input type="text" id="username" placeholder="Username" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <select id="role">
+      <option value="admin">Admin</option>
+      <option value="user">User</option>
+    </select>
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="maintenance" class="card hidden">
+    <h3>Maintenance (Admin Only)</h3>
+    <h4>Add Membership</h4>
+    <form onsubmit="addMember(event)">
+      <input type="text" id="mname" placeholder="Member Name" required />
+      <label><input type="radio" name="duration" value="6" checked/>6 Months</label>
+      <label><input type="radio" name="duration" value="12"/>1 Year</label>
+      <label><input type="radio" name="duration" value="24"/>2 Years</label>
+      <label><input type="checkbox" id="active"/>Active</label>
+      <button type="submit">Add</button>
+    </form>
+    <h4>Update Membership</h4>
+    <form onsubmit="updateMember(event)">
+      <input type="number" id="mid" placeholder="Membership Number" required />
+      <select id="action">
+        <option value="extend">Extend</option>
+        <option value="cancel">Cancel</option>
+      </select>
+      <button type="submit">Update</button>
+    </form>
+  </div>
+
+  <div id="reports" class="card hidden">
+    <h3>Reports</h3>
+    <div id="reportData"></div>
+  </div>
+
+  <div id="transactions" class="card hidden">
+    <h3>Transactions</h3>
+    <p>Membership transactions recorded.</p>
+  </div>
+</div>
+
+<script>
+let sessionRole = null;
+function show(id){
+  document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
+  if(id==='maintenance' && sessionRole!=='admin'){alert('Access Denied');return}
+  document.getElementById(id).classList.remove('hidden');
+}
+function login(){
+  let u=document.getElementById('username').value;
+  let p=document.getElementById('password').value;
+  if(!u||!p){alert('All fields mandatory');return}
+  sessionRole=document.getElementById('role').value;
+  localStorage.setItem('role',sessionRole);
+  alert('Session Started');
+}
+function logout(){localStorage.clear();alert('Session Ended')}
+function addMember(e){
+  e.preventDefault();
+  let name=document.getElementById('mname').value;
+  let dur=document.querySelector('input[name="duration"]:checked').value;
+  let act=document.getElementById('active').checked?'Yes':'No';
+  let data=JSON.parse(localStorage.getItem('members')||'[]');
+  data.push({id:data.length+1,name,dur,act});
+  localStorage.setItem('members',JSON.stringify(data));
+  alert('Added');
+}
+function updateMember(e){
+  e.preventDefault();
+  let id=document.getElementById('mid').value;
+  let act=document.getElementById('action').value;
+  let data=JSON.parse(localStorage.getItem('members')||'[]');
+  let m=data.find(x=>x.id==id);
+  if(!m){alert('Not Found');return}
+  if(act==='extend'){m.dur=6}else{m.act='No'}
+  localStorage.setItem('members',JSON.stringify(data));
+  alert('Updated');
+}
+window.onload=()=>{sessionRole=localStorage.getItem('role');if(sessionRole!=='admin'){document.getElementById('mMenu').style.display='none'}}
+</script>
+</body>
+</html>
